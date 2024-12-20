@@ -56,7 +56,7 @@ public class AuthController {
         Object result = userService.authenticate(request);
 
         if(result instanceof LoginResource loginResource){
-            ApiResource<LoginResource> response = ApiResource.ok(loginResource, "SUCCESS");
+            ApiResource<LoginResource> response = ApiResource.ok(loginResource, "SUCCESSSSSS");
             return ResponseEntity.ok(response);
         }
 
