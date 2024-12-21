@@ -1,5 +1,7 @@
 package chandanv.local.chandanv.modules.users.controllers;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +27,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
+
 @Validated
 @RestController
 @RequestMapping("api/v1")
@@ -40,13 +43,27 @@ public class UserCatalogueController {
         this.userCatalogueService = userCatalogueService;
     }
 
-    @GetMapping("user_catalogues")
-    public ResponseEntity<?> index(HttpServletRequest request){
-
+    @GetMapping("user_catalogues/all")
+    public ResponseEntity<?> list(HttpServletRequest request) {
         Map<String, String[]> parameters = request.getParameterMap();
-
+        List<UserCatalogue> userCatalogues = userCatalogueService.getAll(parameters);
+        List<UserCatalogueResource> userCataloguesResource = userCatalogues.stream()
+            .map(userCatalogue -> 
+                UserCatalogueResource.builder()
+                    .id(userCatalogue.getId())
+                    .name(userCatalogue.getName())
+                    .publish(userCatalogue.getPublish())
+                    .build()
+            ).collect(Collectors.toList());
+        ApiResource<List<UserCatalogueResource>> response = ApiResource.ok(userCataloguesResource, "SUCCESS");
+        logger.info("Method index Running....!");
+        return ResponseEntity.ok(response); 
+    }
+    
+    @GetMapping("user_catalogues")
+    public ResponseEntity<?> pagination(HttpServletRequest request){
+        Map<String, String[]> parameters = request.getParameterMap();
         Page<UserCatalogue> userCatalogues = userCatalogueService.paginate(parameters);
-
         Page<UserCatalogueResource> userCataloguesResource = userCatalogues.map(userCatalogue -> 
             UserCatalogueResource.builder()
                 .id(userCatalogue.getId())
@@ -54,13 +71,10 @@ public class UserCatalogueController {
                 .publish(userCatalogue.getPublish())
                 .build()
         );
-
         ApiResource<Page<UserCatalogueResource>> response = ApiResource.ok(userCataloguesResource, "SUCCESS");
-
         logger.info("Method index Running....!");
         return ResponseEntity.ok(response); 
     } 
-
 
     @PostMapping("/user_catalogues")
     public ResponseEntity<?> store(@Valid @RequestBody StoreRequest request){
@@ -83,17 +97,13 @@ public class UserCatalogueController {
     ){
         logger.info("Method Update Running....!");
         try {
-
             UserCatalogue userCatalogue = userCatalogueService.update(id, request);
             UserCatalogueResource userCatalogueResource = UserCatalogueResource.builder()
                 .id(userCatalogue.getId())
                 .name(userCatalogue.getName())
                 .publish(userCatalogue.getPublish())
                 .build();
-
-
             ApiResource<UserCatalogueResource> response = ApiResource.ok(userCatalogueResource, "Cập nhật bản ghi thành công");
-            
             return ResponseEntity.ok(response);
             
         } catch (EntityNotFoundException e) {
