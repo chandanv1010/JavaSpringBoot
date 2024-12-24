@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import chandanv.local.chandanv.helpers.FilterParameter;
 import chandanv.local.chandanv.modules.users.controllers.UserCatalogueController;
 import chandanv.local.chandanv.modules.users.entities.UserCatalogue;
+import chandanv.local.chandanv.modules.users.mappers.UserCatalogueMapper;
 import chandanv.local.chandanv.modules.users.repositories.UserCatalogueRepository;
 import chandanv.local.chandanv.modules.users.requests.UserCatalogue.StoreRequest;
 import chandanv.local.chandanv.modules.users.requests.UserCatalogue.UpdateRequest;
@@ -28,9 +29,16 @@ import jakarta.persistence.EntityNotFoundException;
 public class UserCatalogueService extends BaseService implements  UserCatalogueServiceInterface {
     
     private static final Logger logger = LoggerFactory.getLogger(UserCatalogueController.class);
+    private final UserCatalogueMapper userCatalogueMapper;
     
     @Autowired
     private UserCatalogueRepository userCatalogueRepository;
+    
+    public UserCatalogueService(
+        UserCatalogueMapper userCatalogueMapper
+    ){
+        this.userCatalogueMapper = userCatalogueMapper;
+    }
 
 
     @Override
@@ -83,10 +91,7 @@ public class UserCatalogueService extends BaseService implements  UserCatalogueS
     @Transactional
     public UserCatalogue create(StoreRequest request){
         try {
-            UserCatalogue payload = UserCatalogue.builder()
-                .name(request.getName())
-                .publish(request.getPublish())
-                .build();
+            UserCatalogue payload = userCatalogueMapper.toEntity(request);
 
             return userCatalogueRepository.save(payload);
             
@@ -95,19 +100,12 @@ public class UserCatalogueService extends BaseService implements  UserCatalogueS
         }
     }
 
-
     @Override
     @Transactional
     public UserCatalogue update(Long id, UpdateRequest request){
-
         UserCatalogue userCatalogue = userCatalogueRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Nhóm thành viên không tồn tại"));
-
-        UserCatalogue payload = userCatalogue.toBuilder()
-            .name(request.getName())
-            .publish(request.getPublish())
-            .build();
-        
-        return userCatalogueRepository.save(payload);
+        userCatalogueMapper.updateEntityFromRequest(request, userCatalogue);
+        return userCatalogueRepository.save(userCatalogue);
     }
 }

@@ -1,7 +1,6 @@
 package chandanv.local.chandanv.modules.users.controllers;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import chandanv.local.chandanv.modules.users.entities.UserCatalogue;
+import chandanv.local.chandanv.modules.users.mappers.UserCatalogueMapper;
 import chandanv.local.chandanv.modules.users.requests.UserCatalogue.StoreRequest;
 import chandanv.local.chandanv.modules.users.requests.UserCatalogue.UpdateRequest;
 import chandanv.local.chandanv.modules.users.resources.UserCatalogueResource;
@@ -35,26 +35,22 @@ public class UserCatalogueController {
     
     private static final Logger logger = LoggerFactory.getLogger(UserCatalogueController.class);
     private final UserCatalogueServiceInterface userCatalogueService;
+    private final UserCatalogueMapper userCatalogueMapper;
     
    
     public UserCatalogueController(
-        UserCatalogueServiceInterface userCatalogueService
+        UserCatalogueServiceInterface userCatalogueService,
+        UserCatalogueMapper userCatalogueMapper
     ){
         this.userCatalogueService = userCatalogueService;
+        this.userCatalogueMapper = userCatalogueMapper;
     }
 
-    @GetMapping("user_catalogues/all")
+    @GetMapping("user_catalogues/list")
     public ResponseEntity<?> list(HttpServletRequest request) {
         Map<String, String[]> parameters = request.getParameterMap();
         List<UserCatalogue> userCatalogues = userCatalogueService.getAll(parameters);
-        List<UserCatalogueResource> userCataloguesResource = userCatalogues.stream()
-            .map(userCatalogue -> 
-                UserCatalogueResource.builder()
-                    .id(userCatalogue.getId())
-                    .name(userCatalogue.getName())
-                    .publish(userCatalogue.getPublish())
-                    .build()
-            ).collect(Collectors.toList());
+        List<UserCatalogueResource> userCataloguesResource = userCatalogueMapper.toList(userCatalogues);
         ApiResource<List<UserCatalogueResource>> response = ApiResource.ok(userCataloguesResource, "SUCCESS");
         logger.info("Method index Running....!");
         return ResponseEntity.ok(response); 
@@ -64,13 +60,7 @@ public class UserCatalogueController {
     public ResponseEntity<?> pagination(HttpServletRequest request){
         Map<String, String[]> parameters = request.getParameterMap();
         Page<UserCatalogue> userCatalogues = userCatalogueService.paginate(parameters);
-        Page<UserCatalogueResource> userCataloguesResource = userCatalogues.map(userCatalogue -> 
-            UserCatalogueResource.builder()
-                .id(userCatalogue.getId())
-                .name(userCatalogue.getName())
-                .publish(userCatalogue.getPublish())
-                .build()
-        );
+        Page<UserCatalogueResource> userCataloguesResource = userCatalogueMapper.toResourcePage(userCatalogues);
         ApiResource<Page<UserCatalogueResource>> response = ApiResource.ok(userCataloguesResource, "SUCCESS");
         logger.info("Method index Running....!");
         return ResponseEntity.ok(response); 
@@ -79,11 +69,7 @@ public class UserCatalogueController {
     @PostMapping("/user_catalogues")
     public ResponseEntity<?> store(@Valid @RequestBody StoreRequest request){
         UserCatalogue userCatalogue = userCatalogueService.create(request);
-        UserCatalogueResource userCatalogueResource = UserCatalogueResource.builder()
-            .id(userCatalogue.getId())
-            .name(userCatalogue.getName())
-            .publish(userCatalogue.getPublish())
-            .build();
+        UserCatalogueResource userCatalogueResource = userCatalogueMapper.tResource(userCatalogue);
 
         ApiResource<UserCatalogueResource> response = ApiResource.ok(userCatalogueResource, "Thêm mới bản ghi thành công");
         logger.info("Method Store Running....!");
@@ -98,11 +84,7 @@ public class UserCatalogueController {
         logger.info("Method Update Running....!");
         try {
             UserCatalogue userCatalogue = userCatalogueService.update(id, request);
-            UserCatalogueResource userCatalogueResource = UserCatalogueResource.builder()
-                .id(userCatalogue.getId())
-                .name(userCatalogue.getName())
-                .publish(userCatalogue.getPublish())
-                .build();
+            UserCatalogueResource userCatalogueResource = userCatalogueMapper.tResource(userCatalogue);
             ApiResource<UserCatalogueResource> response = ApiResource.ok(userCatalogueResource, "Cập nhật bản ghi thành công");
             return ResponseEntity.ok(response);
             
