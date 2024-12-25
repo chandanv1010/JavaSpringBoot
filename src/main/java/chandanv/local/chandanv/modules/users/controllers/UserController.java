@@ -25,9 +25,7 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<?> me(){
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User không tồn tại"));
-
         UserResource userResource = UserResource.builder()
             .id(user.getId())
             .email(user.getEmail())

@@ -3,6 +3,8 @@ package chandanv.local.chandanv.modules.users.services.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,14 +16,11 @@ import chandanv.local.chandanv.modules.users.resources.LoginResource;
 import chandanv.local.chandanv.modules.users.resources.UserResource;
 import chandanv.local.chandanv.modules.users.services.interfaces.UserServiceInterface;
 import chandanv.local.chandanv.resources.ApiResource;
-import chandanv.local.chandanv.services.BaseService;
 import chandanv.local.chandanv.services.JwtService;
-import org.springframework.http.HttpStatus;
-import org.springframework.beans.factory.annotation.Value;
 
 
 @Service
-public class UserService extends BaseService implements  UserServiceInterface {
+public class UserService  implements  UserServiceInterface {
     
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
