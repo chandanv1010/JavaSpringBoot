@@ -2,6 +2,8 @@ package chandanv.local.chandanv.services;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,10 +19,17 @@ import chandanv.local.chandanv.mappers.BaseMapper;
 import chandanv.local.chandanv.specifications.BaseSpecification;
 import jakarta.persistence.EntityNotFoundException;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import java.util.Set;
+import java.util.HashSet;
 
 
 @Service
-public abstract  class BaseService <
+public abstract class BaseService <
     T, 
     M extends BaseMapper<T, ?, C, U>, 
     C, 
@@ -28,8 +37,15 @@ public abstract  class BaseService <
     R extends JpaRepository<T, Long> & JpaSpecificationExecutor<T>
 > {
 
+    @Autowired
+    private ApplicationContext applicationContext;
+  
+    private final Logger logger = LoggerFactory.getLogger(getClass());
    
     protected abstract String[] getSearchFields();
+    protected String[] getRelations(){
+        return new String[0];
+    }
     protected abstract R getRepository();
     protected abstract M getMapper();
     
@@ -51,8 +67,12 @@ public abstract  class BaseService <
 
     @Transactional
     public T create(C request){
+        logger.info("Creating....");
         T payload = getMapper().toEntity(request);
-        return getRepository().save(payload);
+        T entity = getRepository().save(payload); //thêm mới vào trong bảng gốc.
+        handleManyToManyRelations(entity, request);
+
+        return entity;
     } 
 
     @Transactional
@@ -60,7 +80,9 @@ public abstract  class BaseService <
         T entity = getRepository().findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Bản ghi không tồn tại"));
         getMapper().updateEntityFromRequest(request, entity);
-        return getRepository().save(entity);
+        T entityUpdate = getRepository().save(entity);
+        handleManyToManyRelations(entityUpdate, request);
+        return entityUpdate;
     }
 
 
@@ -101,6 +123,42 @@ public abstract  class BaseService <
         return specs;
     }
 
+    private void handleManyToManyRelations(T entity, Object request){
+        String[] relations = getRelations();
+        if(relations != null && relations.length > 0){
+            for(String relation: relations){
+                try {
+
+                    Field requestField = request.getClass().getDeclaredField(relation);
+                    requestField.setAccessible(true);
+
+                    @SuppressWarnings("unchecked")
+                    List<Long> ids = (List<Long>) requestField.get(request);
+                    if(ids != null && !ids.isEmpty()){
+                        Field entityField = entity.getClass().getDeclaredField(relation);
+                        entityField.setAccessible(true);
+
+                        ParameterizedType setType = (ParameterizedType) entityField.getGenericType();
+                        Class<?> entityClass = (Class<?>) setType.getActualTypeArguments()[0];
+
+                        String repositoryName = entityClass.getSimpleName() + "Repository";
+                        repositoryName = Character.toLowerCase(repositoryName.charAt(0)) + repositoryName.substring(1);
+                        
+                        @SuppressWarnings("unchecked")
+                        JpaRepository<T, Long> repository = (JpaRepository<T, Long>) applicationContext.getBean(repositoryName);
+                        List<T> entities = repository.findAllById(ids);
+                        Set<T> entitySet = new HashSet<>(entities);
+                        entityField.set(entity, entitySet);
+                    }
+                    
+                }catch ( NoSuchFieldException | ClassCastException | IllegalAccessException  e) {
+                    throw new RuntimeException("Lỗi xảy ra khi xử lý quan hệ: " + relation + " " + e.getMessage(), e);
+                }
+            }
+        }
+    }
+
+
     protected Sort createSort(String sortParam){
         if(sortParam == null || sortParam.isEmpty()){
             return Sort.by(Sort.Order.desc("id"));
@@ -115,6 +173,7 @@ public abstract  class BaseService <
             return Sort.by(Sort.Order.asc(field));
         }
     }
+
 
 
 }

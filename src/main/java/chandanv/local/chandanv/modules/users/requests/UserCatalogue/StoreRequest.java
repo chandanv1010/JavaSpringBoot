@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import java.util.List;
 
 
 @Data
@@ -19,5 +20,10 @@ public class StoreRequest {
     @Max(value = 2, message= "Giá trị trạng thái phải nhỏ hơn hoặc bằng 2")
     private Integer publish;
 
+    @NotNull(message = "Chưa cấp quyền cho nhóm thành viên")
+    private List<Long> permissions;
 
+    @NotNull(message = "Chưa cấp quyền cho nhóm thành viên")
+    private List<Long> users;
+   
 }

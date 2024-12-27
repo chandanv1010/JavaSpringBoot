@@ -6,12 +6,20 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import jakarta.persistence.FetchType;
 
 
 @NoArgsConstructor
@@ -29,6 +37,13 @@ public class User {
     @Column(name="user_catalogue_id")
     private Long userCatalogueId;
 
+    @ManyToMany(fetch=FetchType.EAGER)
+    @JoinTable(
+        name = "user_catalogue_user",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns= @JoinColumn(name = "user_catalogue_id")
+    )
+    private Set<UserCatalogue> userCatalogues = new HashSet<>();
 
     private String name;
     private String email;

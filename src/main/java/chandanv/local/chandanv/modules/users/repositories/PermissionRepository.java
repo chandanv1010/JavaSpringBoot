@@ -5,7 +5,7 @@ import org.springframework.stereotype.Repository;
 import chandanv.local.chandanv.modules.users.entities.Permission;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-@Repository
+@Repository("permissionRepository")
 public interface PermissionRepository extends JpaRepository<Permission, Long>, JpaSpecificationExecutor<Permission> {
     
 }

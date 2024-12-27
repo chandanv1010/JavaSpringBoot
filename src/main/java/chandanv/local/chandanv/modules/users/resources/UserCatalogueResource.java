@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 public class UserCatalogueResource {
     private final Long id;
     private final String name;
-    private final Integer publish;
+    private final Integer publish; 
 
    
 }
