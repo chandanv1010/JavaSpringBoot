@@ -1,5 +1,7 @@
 package chandanv.local.chandanv.modules.users.requests.UserCatalogue;
 
+import java.util.List;
+
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -19,5 +21,10 @@ public class UpdateRequest {
     @Max(value = 2, message= "Giá trị trạng thái phải nhỏ hơn hoặc bằng 2")
     private Integer publish;
 
+    // @NotNull(message = "Chưa cấp quyền cho nhóm thành viên")
+    private List<Long> permissions;
+
+    // @NotNull(message = "Chưa cấp quyền cho nhóm thành viên")
+    private List<Long> users;
 
 }

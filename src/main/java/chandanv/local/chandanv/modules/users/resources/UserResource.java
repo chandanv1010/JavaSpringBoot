@@ -2,11 +2,11 @@ package chandanv.local.chandanv.modules.users.resources;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import java.util.Set;
+import chandanv.local.chandanv.modules.users.entities.UserCatalogue;
 
 @Data
 @Builder
-@RequiredArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserResource {
     
@@ -15,6 +15,8 @@ public class UserResource {
     private final String name;
     private final String phone;
 
+
+    private Set<UserCatalogue> userCatalogues;
    
 
 }

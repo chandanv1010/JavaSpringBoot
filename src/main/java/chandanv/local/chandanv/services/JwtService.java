@@ -47,7 +47,7 @@ public class JwtService {
 
 
     public String generateToken(Long userId,  String email, Long expirationTime){
-        logger.info("generating...");
+        // logger.info("generating...");
         Date now = new Date();
 
         if(expirationTime == null){

@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import chandanv.local.chandanv.annotations.RequirePermission;
+import chandanv.local.chandanv.enums.PermissionEnum;
 import chandanv.local.chandanv.mappers.BaseMapper;
 import chandanv.local.chandanv.modules.users.services.interfaces.BaseServiceInterface;
 import chandanv.local.chandanv.resources.ApiResource;
@@ -33,32 +35,43 @@ public abstract class BaseController <
     protected final BaseServiceInterface<E, C, U> service;
     protected final BaseMapper<E, R, C, U> mapper;
     protected final Rp repo;
+    public final PermissionEnum module;
 
-    public BaseController(BaseServiceInterface<E, C, U> service, BaseMapper<E, R, C, U> mapper, Rp repo){
+
+    public BaseController(BaseServiceInterface<E, C, U> service, BaseMapper<E, R, C, U> mapper, Rp repo, PermissionEnum module){
         this.service = service;
         this.mapper = mapper;
         this.repo = repo;
+        this.module = module;
     }
 
+    public PermissionEnum getModule() {
+        return module;
+    }
+
+
     @GetMapping("/list")
+    @RequirePermission(action = "list", viewAll="view_all")
     public ResponseEntity<?> list(HttpServletRequest request) {
         Map<String, String[]> parameters = request.getParameterMap();
-        List<E> entities = service.getAll(parameters);
+        List<E> entities = service.getAll(parameters, request);
         List<R> resource = mapper.toList(entities);
         ApiResource<List<R>> response = ApiResource.ok(resource, "SUCCESS");
         return ResponseEntity.ok(response); 
     }
 
     @GetMapping
+    @RequirePermission(action = "pagination", viewAll="view_all")
     public ResponseEntity<?> pagination(HttpServletRequest request){
         Map<String, String[]> parameters = request.getParameterMap();
-        Page<E> entities = service.paginate(parameters);
+        Page<E> entities = service.paginate(parameters, request);
         Page<R> resource = mapper.toResourcePage(entities);
         ApiResource<Page<R>> response = ApiResource.ok(resource, "SUCCESS");
         return ResponseEntity.ok(response); 
     } 
 
     @PostMapping
+    @RequirePermission(action = "store")
     public ResponseEntity<?> store(@Valid @RequestBody C request){
         try {
             E entity = service.create(request);
@@ -75,6 +88,7 @@ public abstract class BaseController <
     }
 
     @PutMapping("/{id}")
+    @RequirePermission(action = "update")
     public ResponseEntity<?> update(
         @PathVariable("id") Long id,
         @Valid @RequestBody U request
@@ -97,6 +111,7 @@ public abstract class BaseController <
     }
 
     @GetMapping("/{id}")
+    @RequirePermission(action = "show")
     public ResponseEntity<?> show( @PathVariable Long id) {
         E entity = repo.findById(id).orElseThrow(() ->new RuntimeException("Bản ghi không tồn tại"));
         R resource = mapper.tResource(entity);
@@ -105,6 +120,7 @@ public abstract class BaseController <
     }
 
     @DeleteMapping("/{id}")
+    @RequirePermission(action = "delete")
     public ResponseEntity<?> delete( @PathVariable Long id) {
         try {
             service.delete(id);
@@ -122,6 +138,7 @@ public abstract class BaseController <
     }
 
     @DeleteMapping
+    @RequirePermission(action = "deleteMany")
     public ResponseEntity<?> deleteMany(@RequestBody List<Long> Ids){
         try {
             service.deleteMultipleEntity(Ids);
@@ -139,4 +156,5 @@ public abstract class BaseController <
         }
     }
 
+  
 }

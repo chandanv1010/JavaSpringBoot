@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import chandanv.local.chandanv.controllers.BaseController;
+import chandanv.local.chandanv.enums.PermissionEnum;
 import chandanv.local.chandanv.modules.users.entities.Permission;
 import chandanv.local.chandanv.modules.users.mappers.PermissionMapper;
 import chandanv.local.chandanv.modules.users.repositories.PermissionRepository;
@@ -29,6 +30,6 @@ public class PermissionController extends BaseController<
         PermissionMapper mapper,
         PermissionRepository repo
     ){
-        super(service, mapper, repo);
+        super(service, mapper, repo, PermissionEnum.PERMISSION);
     }
 }

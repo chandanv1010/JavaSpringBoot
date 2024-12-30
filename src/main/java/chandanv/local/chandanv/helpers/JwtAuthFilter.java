@@ -110,9 +110,6 @@ public class JwtAuthFilter extends OncePerRequestFilter{
                 return;
             }
             
-           
-
-            
             if(jwtService.isBlacklistedToken(jwt)){
                 sendErrorResponse(response, 
                     request, 

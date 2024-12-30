@@ -6,6 +6,8 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import chandanv.local.chandanv.mappers.BaseMapper;
 import chandanv.local.chandanv.modules.users.services.interfaces.BaseServiceInterface;
+import jakarta.servlet.http.HttpServletRequest;
 
 
 
@@ -68,106 +71,106 @@ public abstract class BaseControllerTest<
     protected abstract List<R> createTestResourcesByKeywordFiltered(List<R> resources, String keyword);
     protected abstract List<R> createTestResourcesBySimpleFiltered(List<R> resources, Map<String, String[]> filters);
 
-    /* Test trường hợp lấy dữ liệu không có filter --> lấy toàn bộ */
     @Test
     void list_NoFilter_ShouldReturnAllRecords() throws Exception {
-        List<E> mockEntities = createTestEntities();
-        List<R> mockResources = createTestResources();
+        List<E> mockEntities = createTestEntities(); // Tạo mock dữ liệu entities
+        List<R> mockResources = createTestResources(); // Tạo mock dữ liệu resources
 
         @SuppressWarnings("unchecked")
-        ArgumentCaptor<Map<String, String[]>> captor = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Map<String, String[]>> captor = ArgumentCaptor.forClass(Map.class); // ArgumentCaptor để bắt tham số
 
-        when(service.getAll(captor.capture())).thenReturn(mockEntities);
+        // Stub service và mapper
+        when(service.getAll(captor.capture(), any(HttpServletRequest.class))).thenReturn(mockEntities);
         when(mapper.toList(mockEntities)).thenReturn(mockResources);
 
+        // Gửi request GET đến API
         mockMvc.perform(get(getApiPath() + "/list")
-            .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.message").value("SUCCESS"))
-            .andExpect(jsonPath("$.status").value("OK"))
-            .andExpect(jsonPath("$.data").isArray())
-            .andExpect(jsonPath("$.timestamp").exists())
-            .andExpect(jsonPath("$.errors").doesNotExist())
-            .andExpect(jsonPath("$.error").doesNotExist());
-        
-        verify(service).getAll(captor.getValue());
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()) 
+                .andExpect(jsonPath("$.success").value(true)) 
+                .andExpect(jsonPath("$.message").value("SUCCESS")) 
+                .andExpect(jsonPath("$.status").value("OK"))
+                .andExpect(jsonPath("$.data").isArray()) 
+                .andExpect(jsonPath("$.timestamp").exists()) 
+                .andExpect(jsonPath("$.errors").doesNotExist()) 
+                .andExpect(jsonPath("$.error").doesNotExist()); 
+
+    
+        verify(service).getAll(captor.capture(), any(HttpServletRequest.class));
         verify(mapper).toList(mockEntities);
 
+        Map<String, String[]> capturedParams = captor.getValue(); 
+        assertThat(capturedParams).isNotNull(); 
+        assertThat(capturedParams).isEmpty();
     }
 
-
-    /* Test trường hợp lấy dữ liệu có filter --> keyword */
     @Test
-    void list_withKeywordFilter_ShouldReturnFilteredKeywordRecords() throws Exception{
-
+    void list_withKeywordFilter_ShouldReturnFilteredKeywordRecords() throws Exception {
+        // Tạo mock dữ liệu
         List<E> mockEntities = createTestEntities();
         List<R> mockResources = createTestResources();
         List<E> mockFilterEntities = createTestEntitiesByKeywordFiltered(mockEntities, getTestKeyword());
         List<R> mockFilterResources = createTestResourcesByKeywordFiltered(mockResources, getTestKeyword());
 
-        
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Map<String, String[]>> captor = ArgumentCaptor.forClass(Map.class);
 
-        when(service.getAll(captor.capture())).thenReturn(mockFilterEntities);
+        // Stub gọi service và mapper
+        when(service.getAll(captor.capture(), any(HttpServletRequest.class))).thenReturn(mockFilterEntities);
         when(mapper.toList(mockFilterEntities)).thenReturn(mockFilterResources);
 
-        ResultActions actions =  mockMvc.perform(get(getApiPath() + "/list")
-            .param("keyword", getTestKeyword())
-            .contentType(MediaType.APPLICATION_JSON));
-            // .andDo(print());
-      
+        // Gửi request GET đến API
+        ResultActions actions = mockMvc.perform(get(getApiPath() + "/list")
+                .param("keyword", getTestKeyword()) // Thêm keyword vào request
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // Kiểm tra phản hồi từ API
         getExpectResponseData(actions, mockFilterResources)
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.message").value("SUCCESS"))
-            .andExpect(jsonPath("$.status").value("OK"))
-            .andExpect(jsonPath("$.data").isArray())
-            .andExpect(jsonPath("$.timestamp").exists())
-            .andExpect(jsonPath("$.errors").doesNotExist())
-            .andExpect(jsonPath("$.error").doesNotExist());
+                .andExpect(status().isOk()) 
+                .andExpect(jsonPath("$.success").value(true)) 
+                .andExpect(jsonPath("$.message").value("SUCCESS")) 
+                .andExpect(jsonPath("$.status").value("OK")) 
+                .andExpect(jsonPath("$.data").isArray()) 
+                .andExpect(jsonPath("$.timestamp").exists()) 
+                .andExpect(jsonPath("$.errors").doesNotExist()) 
+                .andExpect(jsonPath("$.error").doesNotExist()); 
 
-            verify(service).getAll(captor.getValue());
-            verify(mapper).toList(mockFilterEntities);
-        
-            Map<String, String[]> capturedParams = captor.getValue();
-            assertThat(capturedParams.get("keyword")).containsExactly(getTestKeyword());
 
+        verify(service).getAll(captor.capture(), any(HttpServletRequest.class)); 
+        verify(mapper).toList(mockFilterEntities); 
+
+        Map<String, String[]> capturedParams = captor.getValue(); 
+        assertThat(capturedParams).isNotNull(); 
+        assertThat(capturedParams.get("keyword")).containsExactly(getTestKeyword());
     }
 
-    /* Test trường hợp lấy dữ liệu với filter --> filterSimple dạng where = */
     @Test
-    void list_withSimpleFilter_ShouldReturnSimpleFilteredRecords() throws  Exception{
+    void list_withSimpleFilter_ShouldReturnSimpleFilteredRecords() throws Exception {
+        // Mock dữ liệu
         Map<String, String[]> filters = getTestSimpleFilter();
         List<E> mockEntities = createTestEntities();
         List<R> mockResources = createTestResources();
-
-
         List<E> mockFilterEntities = createTestEntitiesBySimpleFiltered(mockEntities, filters);
         List<R> mockFilterResources = createTestResourcesBySimpleFiltered(mockResources, filters);
-       
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Map<String, String[]>> captor = ArgumentCaptor.forClass(Map.class);
 
-        when(service.getAll(captor.capture())).thenReturn(mockFilterEntities);
+    
+        when(service.getAll(captor.capture(), any(HttpServletRequest.class))).thenReturn(mockFilterEntities);
         when(mapper.toList(mockFilterEntities)).thenReturn(mockFilterResources);
 
+     
         MockHttpServletRequestBuilder requestBuilder = get(getApiPath() + "/list");
-        for(Map.Entry<String, String[]> entry: filters.entrySet()){
-            String key = entry.getKey();
-            String[] values = entry.getValue();
-            for(String value: values){
+        filters.forEach((key, values) -> {
+            for (String value : values) {
                 requestBuilder.param(key, value);
             }
-        }
-
-        ResultActions actions =  mockMvc.perform(requestBuilder.contentType(MediaType.APPLICATION_JSON))
+        });
+        ResultActions actions = mockMvc.perform(requestBuilder.contentType(MediaType.APPLICATION_JSON))
             .andDo(print());
 
         getExpectResponseFilterData(actions, mockFilterResources)
-            .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.message").value("SUCCESS"))
@@ -176,28 +179,18 @@ public abstract class BaseControllerTest<
             .andExpect(jsonPath("$.timestamp").exists())
             .andExpect(jsonPath("$.errors").doesNotExist())
             .andExpect(jsonPath("$.error").doesNotExist());
-        
-       
+
         Map<String, String[]> capturedParams = captor.getValue();
-        for(Map.Entry<String, String[]> entry: filters.entrySet()){
-            String key = entry.getKey();
-            String[] values = entry.getValue();
+        assertThat(capturedParams).isNotNull();
+        filters.forEach((key, values) -> {
             assertThat(capturedParams).containsKey(key);
             assertThat(capturedParams.get(key)).containsExactly(values);
-        }
-        verify(service).getAll(captor.getValue());
+        });
+
+        verify(service).getAll(eq(capturedParams), any(HttpServletRequest.class));
         verify(mapper).toList(mockFilterEntities);
     }
-
-
-    /* Test trường hợp lấy dữ liệu với filter --> filterComplex dạng ví dụ id[gt], price[gte] ... */
-
-
-    /* Test trường hợp kết hợp tất cả các loại filter với nhau */
-
-
-
-    /* Test trường hợp bị lỗi Error */
+   
 
     
 }

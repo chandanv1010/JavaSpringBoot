@@ -1,9 +1,16 @@
 package chandanv.local.chandanv.services;
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,14 +25,7 @@ import chandanv.local.chandanv.helpers.FilterParameter;
 import chandanv.local.chandanv.mappers.BaseMapper;
 import chandanv.local.chandanv.specifications.BaseSpecification;
 import jakarta.persistence.EntityNotFoundException;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import java.util.Set;
-import java.util.HashSet;
+import jakarta.servlet.http.HttpServletRequest;
 
 
 @Service
@@ -48,18 +48,34 @@ public abstract class BaseService <
     }
     protected abstract R getRepository();
     protected abstract M getMapper();
+
+
+    private Map<String, String[]> modifiedParameters(HttpServletRequest request, Map<String, String[]> parameters){
+
+        Map<String, String[]> modifedParameters = new HashMap<>(parameters);
+
+        Object userIdAttribute = request.getAttribute("userId");
+        if(userIdAttribute != null){
+            String userId = userIdAttribute.toString();
+            modifedParameters.put("userId", new String[]{userId});
+        }
+
+        return modifedParameters;
+    }
     
-    public List<T> getAll(Map<String, String[]> parameters){
-        Sort sort = parseSort(parameters);
-        Specification<T> specs = buildSpecification(parameters, getSearchFields());
+    public List<T> getAll(Map<String, String[]> parameters, HttpServletRequest request){
+        Map<String, String[]> modifiedParameters = modifiedParameters(request, parameters);
+        Sort sort = parseSort(modifiedParameters);
+        Specification<T> specs = buildSpecification(modifiedParameters, getSearchFields());
         return getRepository().findAll(specs, sort);
     }
 
-    public Page<T> paginate(Map<String, String[]> parameters) {
-        int page = parameters.containsKey("page") ? Integer.parseInt(parameters.get("page")[0]) : 1;
-        int perpage = parameters.containsKey("perpage") ? Integer.parseInt(parameters.get("perpage")[0]) : 20;
-        Sort sort  = parseSort(parameters);
-        Specification<T> specs = buildSpecification(parameters, getSearchFields());
+    public Page<T> paginate(Map<String, String[]> parameters, HttpServletRequest request) {
+        Map<String, String[]> modifiedParameters = modifiedParameters(request, parameters);
+        int page = modifiedParameters.containsKey("page") ? Integer.parseInt(modifiedParameters.get("page")[0]) : 1;
+        int perpage = modifiedParameters.containsKey("perpage") ? Integer.parseInt(modifiedParameters.get("perpage")[0]) : 20;
+        Sort sort  = parseSort(modifiedParameters);
+        Specification<T> specs = buildSpecification(modifiedParameters, getSearchFields());
 
         Pageable pageable = PageRequest.of(page - 1, perpage, sort);
         return getRepository().findAll(specs, pageable);
@@ -112,6 +128,9 @@ public abstract class BaseService <
     protected Specification<T> buildSpecification(Map<String, String[]> parameters, String[] searchFields){
         String keyword = FilterParameter.filterKeyword(parameters);
         Map<String, String> filterSimple = FilterParameter.filterSimple(parameters);
+
+        logger.info("filterSimple: {}", filterSimple);
+
         Map<String, Map<String, String>> filterComplex = FilterParameter.filterComplex(parameters);
 
         Specification<T> specs = Specification.where(
@@ -148,7 +167,9 @@ public abstract class BaseService <
                         JpaRepository<T, Long> repository = (JpaRepository<T, Long>) applicationContext.getBean(repositoryName);
                         List<T> entities = repository.findAllById(ids);
                         Set<T> entitySet = new HashSet<>(entities);
+
                         entityField.set(entity, entitySet);
+
                     }
                     
                 }catch ( NoSuchFieldException | ClassCastException | IllegalAccessException  e) {

@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import chandanv.local.chandanv.controllers.BaseController;
+import chandanv.local.chandanv.enums.PermissionEnum;
 import chandanv.local.chandanv.modules.users.entities.UserCatalogue;
 import chandanv.local.chandanv.modules.users.mappers.UserCatalogueMapper;
 import chandanv.local.chandanv.modules.users.repositories.UserCatalogueRepository;
@@ -29,6 +30,8 @@ public class UserCatalogueController extends BaseController<
         UserCatalogueMapper mapper,
         UserCatalogueRepository repo
     ){
-        super(service, mapper, repo);
+        super(service, mapper, repo, PermissionEnum.USER_CATALOGUE);
     }
+    
+    
 }

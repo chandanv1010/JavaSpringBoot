@@ -3,6 +3,7 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -13,15 +14,21 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
-import jakarta.persistence.FetchType;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 
+// import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
@@ -34,15 +41,14 @@ public class User {
     private Long id;
 
 
-    @Column(name="user_catalogue_id")
-    private Long userCatalogueId;
-
-    @ManyToMany(fetch=FetchType.EAGER)
+    @Builder.Default
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_catalogue_user",
         joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns= @JoinColumn(name = "user_catalogue_id")
+        inverseJoinColumns = @JoinColumn(name = "user_catalogue_id")
     )
+    @JsonManagedReference
     private Set<UserCatalogue> userCatalogues = new HashSet<>();
 
     private String name;
@@ -68,14 +74,17 @@ public class User {
         updatedAt = LocalDateTime.now();
     }
 
-    public Long getUserCatalogueId(){
-        return userCatalogueId;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User that = (User) o;
+        return Objects.equals(id, that.id);
     }
 
-    public void setUserCatalogueId(Long userCatalogueId){
-        this.userCatalogueId = userCatalogueId;
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
-
-  
 
 }

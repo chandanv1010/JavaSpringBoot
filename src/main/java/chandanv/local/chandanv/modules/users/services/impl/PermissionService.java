@@ -10,6 +10,8 @@ import chandanv.local.chandanv.modules.users.requests.Permission.UpdateRequest;
 import chandanv.local.chandanv.modules.users.services.interfaces.PermissionServiceInterface;
 import chandanv.local.chandanv.services.BaseService;
 
+import chandanv.local.chandanv.enums.PermissionEnum;
+
 @Service
 public class PermissionService extends BaseService<
     Permission, 
@@ -44,6 +46,10 @@ public class PermissionService extends BaseService<
     protected PermissionMapper getMapper(){
         return PermissionMapper;
     }
-    
+
+    public boolean hasPermission(String requiredPermission, PermissionEnum module, String action){
+        String permission = module.getPrefix() + ":" + action;
+        return requiredPermission.equals(permission);
+    }
 
 }

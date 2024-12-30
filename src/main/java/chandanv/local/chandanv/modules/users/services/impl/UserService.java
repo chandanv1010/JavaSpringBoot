@@ -46,7 +46,12 @@ public class UserService  implements  UserServiceInterface {
             if(!passwordEncoder.matches(request.getPassword(), user.getPassword())){
                 throw new BadCredentialsException("Email hoặc mật khẩu không chính xác");
             }
-            UserResource userResource = new UserResource(user.getId(), user.getEmail(), user.getName(), user.getPhone());
+            UserResource userResource = UserResource.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .phone(user.getPhone())
+            .build();
 
 
             String token = jwtService.generateToken(user.getId(), user.getEmail(), defaultExpiration);
