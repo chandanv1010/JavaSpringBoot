@@ -29,13 +29,14 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Data
 @Entity
 @Table(name="users")
 public class User {
 
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -63,6 +64,7 @@ public class User {
 
     @Column(name="updated_at")
     private LocalDateTime updatedAt;
+
 
     @PrePersist
     protected void onCreated(){

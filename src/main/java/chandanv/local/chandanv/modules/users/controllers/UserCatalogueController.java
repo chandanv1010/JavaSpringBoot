@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import chandanv.local.chandanv.controllers.BaseController;
 import chandanv.local.chandanv.enums.PermissionEnum;
+
 import chandanv.local.chandanv.modules.users.entities.UserCatalogue;
 import chandanv.local.chandanv.modules.users.mappers.UserCatalogueMapper;
 import chandanv.local.chandanv.modules.users.repositories.UserCatalogueRepository;

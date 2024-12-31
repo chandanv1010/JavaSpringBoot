@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import chandanv.local.chandanv.mappers.BaseMapper;
-import chandanv.local.chandanv.modules.users.services.interfaces.BaseServiceInterface;
+import chandanv.local.chandanv.services.interfaces.BaseServiceInterface;
 import jakarta.servlet.http.HttpServletRequest;
 
 

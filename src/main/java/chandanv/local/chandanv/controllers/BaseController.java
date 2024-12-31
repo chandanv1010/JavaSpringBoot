@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import chandanv.local.chandanv.annotations.RequirePermission;
 import chandanv.local.chandanv.enums.PermissionEnum;
 import chandanv.local.chandanv.mappers.BaseMapper;
-import chandanv.local.chandanv.modules.users.services.interfaces.BaseServiceInterface;
+import chandanv.local.chandanv.services.interfaces.BaseServiceInterface;
 import chandanv.local.chandanv.resources.ApiResource;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -51,7 +51,7 @@ public abstract class BaseController <
 
 
     @GetMapping("/list")
-    @RequirePermission(action = "list", viewAll="view_all")
+    // @RequirePermission(action = "list", viewAll="view_all")
     public ResponseEntity<?> list(HttpServletRequest request) {
         Map<String, String[]> parameters = request.getParameterMap();
         List<E> entities = service.getAll(parameters, request);
@@ -61,7 +61,7 @@ public abstract class BaseController <
     }
 
     @GetMapping
-    @RequirePermission(action = "pagination", viewAll="view_all")
+    // @RequirePermission(action = "pagination", viewAll="view_all")
     public ResponseEntity<?> pagination(HttpServletRequest request){
         Map<String, String[]> parameters = request.getParameterMap();
         Page<E> entities = service.paginate(parameters, request);
@@ -105,7 +105,7 @@ public abstract class BaseController <
             );
         } catch (Exception e){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                ApiResource.error("INTERNAL_SERVER_ERROR", "Có lỗi xảy ra trong quá trình cập nhật", HttpStatus.INTERNAL_SERVER_ERROR)
+                ApiResource.error("INTERNAL_SERVER_ERROR", "Có lỗi xảy ra trong quá trình cập nhật " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR)
             );
         }
     }

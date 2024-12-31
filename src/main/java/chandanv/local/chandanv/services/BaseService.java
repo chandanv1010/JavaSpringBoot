@@ -49,6 +49,10 @@ public abstract class BaseService <
     protected abstract R getRepository();
     protected abstract M getMapper();
 
+    protected void preProcessRequest(C request){
+
+    }
+
 
     private Map<String, String[]> modifiedParameters(HttpServletRequest request, Map<String, String[]> parameters){
 
@@ -84,8 +88,9 @@ public abstract class BaseService <
     @Transactional
     public T create(C request){
         logger.info("Creating....");
+        preProcessRequest(request);
         T payload = getMapper().toEntity(request);
-        T entity = getRepository().save(payload); //thêm mới vào trong bảng gốc.
+        T entity = getRepository().save(payload);
         handleManyToManyRelations(entity, request);
 
         return entity;
@@ -147,19 +152,15 @@ public abstract class BaseService <
         if(relations != null && relations.length > 0){
             for(String relation: relations){
                 try {
-
                     Field requestField = request.getClass().getDeclaredField(relation);
                     requestField.setAccessible(true);
-
                     @SuppressWarnings("unchecked")
                     List<Long> ids = (List<Long>) requestField.get(request);
                     if(ids != null && !ids.isEmpty()){
                         Field entityField = entity.getClass().getDeclaredField(relation);
                         entityField.setAccessible(true);
-
                         ParameterizedType setType = (ParameterizedType) entityField.getGenericType();
                         Class<?> entityClass = (Class<?>) setType.getActualTypeArguments()[0];
-
                         String repositoryName = entityClass.getSimpleName() + "Repository";
                         repositoryName = Character.toLowerCase(repositoryName.charAt(0)) + repositoryName.substring(1);
                         
@@ -167,9 +168,7 @@ public abstract class BaseService <
                         JpaRepository<T, Long> repository = (JpaRepository<T, Long>) applicationContext.getBean(repositoryName);
                         List<T> entities = repository.findAllById(ids);
                         Set<T> entitySet = new HashSet<>(entities);
-
                         entityField.set(entity, entitySet);
-
                     }
                     
                 }catch ( NoSuchFieldException | ClassCastException | IllegalAccessException  e) {

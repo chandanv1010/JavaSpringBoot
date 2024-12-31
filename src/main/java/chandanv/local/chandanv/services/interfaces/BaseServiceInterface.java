@@ -1,4 +1,4 @@
-package chandanv.local.chandanv.modules.users.services.interfaces;
+package chandanv.local.chandanv.services.interfaces;
 
 import java.util.List;
 import java.util.Map;

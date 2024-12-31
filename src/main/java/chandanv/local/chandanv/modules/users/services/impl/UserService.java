@@ -10,23 +10,33 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import chandanv.local.chandanv.modules.users.entities.User;
+import chandanv.local.chandanv.modules.users.mappers.UserMapper;
 import chandanv.local.chandanv.modules.users.repositories.UserRepository;
 import chandanv.local.chandanv.modules.users.requests.LoginRequest;
+import chandanv.local.chandanv.modules.users.requests.User.StoreRequest;
+import chandanv.local.chandanv.modules.users.requests.User.UpdateRequest;
 import chandanv.local.chandanv.modules.users.resources.LoginResource;
 import chandanv.local.chandanv.modules.users.resources.UserResource;
 import chandanv.local.chandanv.modules.users.services.interfaces.UserServiceInterface;
 import chandanv.local.chandanv.resources.ApiResource;
+import chandanv.local.chandanv.services.BaseService;
 import chandanv.local.chandanv.services.JwtService;
 
 
+
 @Service
-public class UserService  implements  UserServiceInterface {
+public class UserService extends BaseService<
+    User, 
+    UserMapper, 
+    StoreRequest, 
+    UpdateRequest,
+    UserRepository
+> implements  UserServiceInterface {
     
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     @Autowired
     private JwtService jwtService;
-
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -36,6 +46,36 @@ public class UserService  implements  UserServiceInterface {
 
     @Value("${jwt.defaultExpiration}")
     private long defaultExpiration;
+
+    private final UserMapper userMapper;
+    
+    
+    public UserService(
+        UserMapper userMapper
+    ){
+        this.userMapper = userMapper;
+    }
+
+    @Override
+    protected String[] getSearchFields(){
+        return new String[]{"name", "phone", "email"};
+    }
+
+    @Override
+    protected String[] getRelations(){
+        return new String[]{"userCatalogues"};
+    }
+   
+    @Override
+    protected UserRepository getRepository(){
+        return userRepository;
+    }
+
+    @Override
+    protected UserMapper getMapper(){
+        return userMapper;
+    }
+    
 
 
     @Override
@@ -64,6 +104,13 @@ public class UserService  implements  UserServiceInterface {
 
             return ApiResource.error("AUTH_ERROR", e.getMessage(), HttpStatus.UNAUTHORIZED);
 
+        }
+    }
+
+    @Override
+    protected void preProcessRequest(StoreRequest request){
+        if(request.getPassword() != null){
+            request.setPassword(passwordEncoder.encode(request.getPassword()));
         }
     }
 
